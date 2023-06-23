@@ -71,10 +71,10 @@ const char* findIP(const Translate* translateArray, int size, const char* domain
     for (int i = 0; i < strlen(translateArray); i++) {
         free(translateArray[i].IP);
         free(translateArray[i].domain);
-    }*/
+    }
 
     // 释放Translate数组的内存
     free(translateArray);
 
     return 0;
-}
+}*/
