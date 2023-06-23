@@ -1,0 +1,10 @@
+unsigned short trans_NewID(unsigned short OLDID, SOCKADDR_IN temp, BOOL ifdone)
+{
+	srand(time(NULL)); //随机数种子
+	IDTransTable[IDcount].oldID = OLDID;
+	IDTransTable[IDcount].client = temp;
+	IDTransTable[IDcount].done = ifdone;
+	IDcount++; //ID转换表数目要更新~
+
+	return (unsigned short)(IDcount - 1);	//以表中下标作为新的ID
+}
