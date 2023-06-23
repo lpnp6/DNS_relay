@@ -47,7 +47,7 @@ const char* findIP(const Translate* translateArray, int size, const char* domain
     return NULL; // 如果未找到匹配的域名，则返回NULL
 }
 
-int main() {
+/*int main() {
 
     Translate* translateArray = (Translate*)malloc(size * sizeof(Translate));
 
@@ -71,7 +71,7 @@ int main() {
     for (int i = 0; i < strlen(translateArray); i++) {
         free(translateArray[i].IP);
         free(translateArray[i].domain);
-    }
+    }*/
 
     // 释放Translate数组的内存
     free(translateArray);
