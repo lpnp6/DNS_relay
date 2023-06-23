@@ -1,4 +1,4 @@
-
+#pragma once
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -11,7 +11,7 @@ typedef struct {
     uint16_t ID; // Identification
     uint16_t id;
     uint8_t qr : 1;
-    uint8_t opcode : 4; 
+    uint8_t opcode : 4;
     uint8_t aa : 1;
     uint8_t tc : 1;
     uint8_t rd : 1;
@@ -33,7 +33,7 @@ typedef struct {
 typedef struct {
     char* name; // 域名
     uint16_t type; // 类型
-    uint16_t class; // 类
+    uint16_t Class; // 类
     uint32_t ttl; // 生存时间
     uint16_t rdlength; // 资源数据长度
     char* rdata; // 资源数据
@@ -41,8 +41,8 @@ typedef struct {
 
 typedef struct {
     dns_header* header;
-    dns_query * que;
-    dns_record * rr;
+    dns_query* que;
+    dns_record* rr;
 } dns_packet_t;  //整个报文
 
 typedef struct cache_node {
@@ -51,12 +51,5 @@ typedef struct cache_node {
     time_t expire_time; // The expire time of the cache node (in seconds since epoch)
     struct cache_node* next; // The pointer to the next cache node in the list
 } cache_node_t;
-
-typedef struct translate
-{
-    char* IP;						//IP地址
-    char* domain;					//域名
-} Translate; //DNS域名解析表
-
 
 
