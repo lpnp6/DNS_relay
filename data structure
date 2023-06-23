@@ -1,0 +1,62 @@
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <WinSock2.h>
+#include <windows.h>
+#include <time.h>
+
+typedef struct {
+    uint16_t ID; // Identification
+    uint16_t id;
+    uint8_t qr : 1;
+    uint8_t opcode : 4; 
+    uint8_t aa : 1;
+    uint8_t tc : 1;
+    uint8_t rd : 1;
+    uint8_t ra : 1;
+    uint8_t z : 3;
+    uint8_t rcode : 4;
+    uint16_t qdcount;
+    uint16_t ancount;
+    uint16_t nscount;
+} dns_header;//头部
+
+typedef struct {
+    uint8_t* qname; // 查询名
+    uint16_t qtype; // 查询类型
+    uint16_t qclass; // 查询类
+    struct dns_query* next;
+} dns_query;//查询问题区域
+
+typedef struct {
+    char* name; // 域名
+    uint16_t type; // 类型
+    uint16_t class; // 类
+    uint32_t ttl; // 生存时间
+    uint16_t rdlength; // 资源数据长度
+    char* rdata; // 资源数据
+} dns_record;
+
+typedef struct {
+    dns_header* header;
+    dns_query * que;
+    dns_record * rr;
+} dns_packet_t;  //整个报文
+
+typedef struct cache_node {
+    dns_packet_t* query; // The query packet
+    dns_packet_t* response; // The response packet
+    time_t expire_time; // The expire time of the cache node (in seconds since epoch)
+    struct cache_node* next; // The pointer to the next cache node in the list
+} cache_node_t;
+
+typedef struct translate
+{
+    char* IP;						//IP地址
+    char* domain;					//域名
+} Translate; //DNS域名解析表
+
+
+
