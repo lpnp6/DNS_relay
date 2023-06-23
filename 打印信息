@@ -28,7 +28,7 @@ void PrintInfo(unsigned short newID, int find)
 	//在表中找到DNS请求中的域名
 	else
 	{
-		if (strcmp(DNSTable[find].IP, "0.0.0.0") == 0)  //不良网站拦截
+		if (strcmp(DNST_domain_table[find].IP, "0.0.0.0") == 0)  //不良网站拦截
 		{
 			//屏蔽功能
 			printf("屏蔽");
