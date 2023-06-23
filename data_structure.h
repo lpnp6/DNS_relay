@@ -52,4 +52,18 @@ typedef struct cache_node {
     struct cache_node* next; // The pointer to the next cache node in the list
 } cache_node_t;
 
+typedef struct translate
+{
+    char* IP;						//IP地址
+    char* domain;					//域名
+} ip_domain_trans; //DNS域名解析表
 
+typedef struct ID_change
+{
+	unsigned short oldID;			//原有ID
+	BOOL done;						//标记是否完成解析
+	SOCKADDR_IN client;				//请求者套接字地址
+} ID_trans;
+
+extern ip_domain_trans DNS_domain_Table[AMOUNT];		//DNS域名解析表
+extern ID_trans IDTransTable[AMOUNT];	//ID转换表
