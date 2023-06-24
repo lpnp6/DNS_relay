@@ -7,12 +7,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct translate {
-    char* IP;        // IP地址
-    char* domain;    // 域名
-} Translate;
 
-// 从文件中读取数据并存储到Translate数组中
+ip_domain_trans DNS_domain_Table[AMOUNT];
+
+
+// 从文件中读取数据并存储到Trans数组中
 int read(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
@@ -23,13 +22,13 @@ int read(const char* filename) {
     char line[256];
     int count = 0;
 
-    while (count < size && fgets(line, sizeof(line), file) != NULL) {
+    while (count < AMOUNT && fgets(line, sizeof(line), file) != NULL) {
         char* ip = strtok(line, " \t\n");
         char* domain = strtok(NULL, " \t\n");
 
         // 分配内存并存储IP和域名
-        translateArray[count].IP = strdup(ip);
-        translateArray[count].domain = strdup(domain);
+        DNS_domain_Table[count].IP = strdup(ip);
+        DNS_domain_Table[count].domain = strdup(domain);
 
         count++;
     }
@@ -41,15 +40,15 @@ int read(const char* filename) {
 // 查找域名对应的IP地址
 const char* findIP(const char* domain) {
     for (int i = 0; i < size; i++) {
-        if (strcmp(translateArray[i].domain, domain) == 0) {
-            return translateArray[i].IP;
+        if (strcmp(DNS_domain_Table[i].domain, domain) == 0) {
+            return DNS_domain_Table[i].IP;
         }
     }
     return NULL; // 如果未找到匹配的域名，则返回NULL
 }
 
 /*int main() {
-
+    //ip_domain_trans
     Translate* translateArray = (Translate*)malloc(size * sizeof(Translate));
 
     // 从文件中读取数据并存储到Translate数组中
