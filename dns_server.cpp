@@ -1,10 +1,9 @@
-#pragma once
-#include"data_structure.h"
+#include"Header.h"
 
 void getURL(char* rev, char* url)
 {
-	int i = 0, j = 0, k = 0,length=strlen(rev);
-	while (i<length)
+	int i = 0, j = 0, k = 0, length = strlen(rev);
+	while (i < length)
 	{
 		if (rev[i] > 0 && rev[i] <= 63)
 		{
