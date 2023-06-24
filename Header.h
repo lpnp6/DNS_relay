@@ -66,6 +66,15 @@ typedef struct ID_change
 	SOCKADDR_IN client;				//请求者套接字地址
 } ID_trans;
 
+void getURL(char* rev, char* url);
+
+void setParameter(int argc, char* argv[]);
+
+SOCKET createSocket(short sin_family, u_short sin_port, char* sin_addr);
+
+void read(const char* filename);
+
+const char* findIP(const char* domain);
 extern ip_domain_trans DNS_domain_Table[AMOUNT];		//DNS域名解析表
 extern ID_trans IDTransTable[AMOUNT];	//ID转换表
 int IDcount=0;
