@@ -4,15 +4,15 @@
 
 WSAData Wsadata;
 
-SOCKET createSocket(short sin_family, u_short sin_port, char* sin_addr)
+SOCKET createSocket()
 {
 	SOCKET Socket = socket(AF_INET, SOCK_DGRAM, 0);
 	u_long FAR arg = 1;
 	ioctlsocket(Socket, FIONBIO, &arg);
 	sockaddr_in addr;
-	addr.sin_family = sin_family;
-	addr.sin_port = htons(sin_port);
-	addr.sin_addr.S_un.S_addr = inet_addr(sin_addr);
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(53);
+	addr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
 	if (bind(Socket, (sockaddr*)&addr, sizeof(addr)) < 0)
 	{
 		printf("Fail to bind UDP port\n");
