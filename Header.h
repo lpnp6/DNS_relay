@@ -79,4 +79,4 @@ extern ip_domain_trans DNS_domain_Table[AMOUNT];		//DNS域名解析表
 extern ID_trans IDTransTable[AMOUNT];	//ID转换表
 int IDcount=0;
 int Day, Hour, Minute, Second, Milliseconds;//保存系统时间的变量
-char Url[lengthURL];
+char url[lengthURL];
