@@ -1,7 +1,4 @@
-#include"data_structure.h"
-#include"tableread.h"
-#include"socket.h"
-#include"Init_Program.h"
+#include"Header.h"
 
 int main(int argc,char* argv[])
 {
