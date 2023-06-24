@@ -70,7 +70,7 @@ void getURL(char* rev, char* url);
 
 void setParameter(int argc, char* argv[]);
 
-SOCKET createSocket(short sin_family, u_short sin_port, char* sin_addr);
+SOCKET createSocket();
 
 void read(const char* filename);
 
