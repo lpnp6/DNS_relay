@@ -6,6 +6,7 @@
 #include <WinSock2.h>
 #include <windows.h>
 #include <time.h>
+#define AMOUNT 1000
 
 typedef struct {
     uint16_t ID; // Identification
@@ -67,3 +68,5 @@ typedef struct ID_change
 
 extern ip_domain_trans DNS_domain_Table[AMOUNT];		//DNS域名解析表
 extern ID_trans IDTransTable[AMOUNT];	//ID转换表
+
+
