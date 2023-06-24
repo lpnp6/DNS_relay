@@ -1,18 +1,7 @@
 #include"Header.h"
 
-int main(int argc,char* argv[])
+int main()
 {
-    WSAStartup(MAKEWORD(2, 2), &Wsadata);
-    setParameter(argc, argv);
-    SOCKET serverSocket = CreateSocket();
-
-//socket部分
-	//命名：localSock，servSock套接字描述符
-	//serverName, clientName, localName网络套接字地址
-
-
-	
-
     char sendBuf[BUFSIZE]; //发送缓存
     char recvBuf[BUFSIZE]; //接收缓存
     char* Path;//本地TXT路径
@@ -74,7 +63,7 @@ int main(int argc,char* argv[])
                 iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &clientName_len);
                 while ((iRecv == 0) || (iRecv == SOCKET_ERROR))
                 {
-                    iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &clientName_len);
+                    iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &iLen_cli);
                     stop = clock();
                     duration = (double)(stop - start) / CLK_TCK;
                     if (duration > 5)
@@ -91,7 +80,7 @@ int main(int argc,char* argv[])
                 memcpy(recvBuf, &oID, sizeof(unsigned short));
                 IDTransTable[GetId].done = TRUE;
                 char* urlname;
-                memcpy(urlname, &(recvBuf[sizeof(DNSHDR)]), iRecv - 12);	//获取请求报文中的域名表示，要去掉DNS报文首部的12字节
+                memcpy(urlname, &(recvBuf[sizeof(dns_header)]), iRecv - 12);	//获取请求报文中的域名表示，要去掉DNS报文首部的12字节
                 char* NewIP;
                 //打印 时间 newID 功能 域名 IP
                 PrintInfo(ntohs(NewID), find);
@@ -111,7 +100,7 @@ int main(int argc,char* argv[])
             else
             {
                 //获取请求的ID
-                now_id = (unsigned short*)malloc(sizeof(unsigned short*));
+                unsigned short* now_id = (unsigned short*)malloc(sizeof(unsigned short*));
                 strncpy(now_id, recvBuf, sizeof(unsigned short));
                 //ID转换
                 unsigned short new_id = trans_NewID(ntohs(*now_id), clientName, FALSE);
