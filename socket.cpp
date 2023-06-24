@@ -1,14 +1,10 @@
-#pragma once
+#pragma warning(disable:4996)
 #pragma comment(lib,"wsock32.lib")
-#include<winsock2.h>
-#include<stdio.h>
-#define IP_LENGTH 16
+#include"Header.h"
 
 WSAData Wsadata;
-char serverIPAddress[IP_LENGTH] = "10.3.9.45";
-char clientIPAddress[IP_LENGTH] = "127.0.0.1";
 
-SOCKET CreateSocket(short sin_family, u_short sin_port,char* sin_addr)
+SOCKET createSocket(short sin_family, u_short sin_port, char* sin_addr)
 {
 	SOCKET Socket = socket(AF_INET, SOCK_DGRAM, 0);
 	u_long FAR arg = 1;
@@ -26,6 +22,3 @@ SOCKET CreateSocket(short sin_family, u_short sin_port,char* sin_addr)
 		printf("Bind UDP port 53 ...OK!\n");
 	return Socket;
 }
-
-
-
