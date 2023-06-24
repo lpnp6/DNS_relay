@@ -6,9 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-
-ip_domain_trans DNS_domain_Table[AMOUNT];
+#include "data_structure.h"
 
 
 // 从文件中读取数据并存储到Trans数组中
@@ -18,7 +16,6 @@ int read(const char* filename) {
         printf("Failed to open file.\n");
         return;
     }
-
     char line[256];
     int count = 0;
 
