@@ -74,7 +74,7 @@ int main(int argc,char* argv[])
                 iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &clientName_len);
                 while ((iRecv == 0) || (iRecv == SOCKET_ERROR))
                 {
-                    iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &iLen_cli);
+                    iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &clientName_len);
                     stop = clock();
                     duration = (double)(stop - start) / CLK_TCK;
                     if (duration > 5)
