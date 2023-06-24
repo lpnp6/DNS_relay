@@ -2,6 +2,18 @@
 
 int main()
 {
+    WSAStartup(MAKEWORD(2, 2), &Wsadata);
+    setParameter(argc, argv);
+    SOCKET serverSocket = CreateSocket();
+
+//socket部分
+	//命名：localSock，servSock套接字描述符
+	//serverName, clientName, localName网络套接字地址
+        //int clientName_len, iSend, iRecv;长度
+
+
+
+    
     char sendBuf[BUFSIZE]; //发送缓存
     char recvBuf[BUFSIZE]; //接收缓存
     char* Path;//本地TXT路径
