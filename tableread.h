@@ -13,7 +13,7 @@ typedef struct translate {
 } Translate;
 
 // 从文件中读取数据并存储到Translate数组中
-void read(Translate* translateArray, int size, const char* filename) {
+int read(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         printf("Failed to open file.\n");
@@ -33,12 +33,13 @@ void read(Translate* translateArray, int size, const char* filename) {
 
         count++;
     }
-
+    
     fclose(file);
+    return count;
 }
-const int size = 1000;
+
 // 查找域名对应的IP地址
-const char* findIP(const Translate* translateArray, int size, const char* domain) {
+const char* findIP(const char* domain) {
     for (int i = 0; i < size; i++) {
         if (strcmp(translateArray[i].domain, domain) == 0) {
             return translateArray[i].IP;
