@@ -1,3 +1,4 @@
+#include<data structure>
 unsigned short trans_NewID(unsigned short OLDID, SOCKADDR_IN temp, BOOL ifdone)
 {
 	srand(time(NULL)); //随机数种子
