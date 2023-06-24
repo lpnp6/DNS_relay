@@ -8,6 +8,7 @@
 #include <time.h>
 #define AMOUNT 1000
 #define lengthURL 64 //最大域名长
+#define BUFSIZE 1024
 typedef struct {
     uint16_t ID; // Identification
     uint16_t id;
