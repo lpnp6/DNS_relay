@@ -1,87 +1,61 @@
-#pragma once
+#include <utility>
+#include <iostream>
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <WinSock2.h>
 #include <windows.h>
 #include <time.h>
-#define AMOUNT 1000
-#define lengthURL 64 //最大域名长
-#define BUFSIZE 1024
+using namespace std;
+#include <map>
+
+#ifndef DEFINITION_H_INCLUDED
+#define DEFINITION_H_INCLUDED
+
+#pragma once
+
+#define BUFSIZE 1024 //最大报文缓存大小
+#define PORT 53   //53端口号
+#define AMOUNT 1500//最大ID转换表大小
 #define NOTFOUND 32767 //没有找到
+#define  LOCAL_DNS_ADDRESS "127.0.0.1"
+#define DEF_DNS_ADDRESS "10.3.9.45"
+#define lengthURL  64 //0~63
+#define IPLength 16
+#define MAX_FILE_LENGTH 253
 
-typedef struct {
-    uint16_t ID; // Identification
-    uint16_t id;
-    uint8_t qr : 1;
-    uint8_t opcode : 4;
-    uint8_t aa : 1;
-    uint8_t tc : 1;
-    uint8_t rd : 1;
-    uint8_t ra : 1;
-    uint8_t z : 3;
-    uint8_t rcode : 4;
-    uint16_t qdcount;
-    uint16_t ancount;
-    uint16_t nscount;
-} dns_header;//头部
-
-typedef struct {
-    uint8_t* qname; // 查询名
-    uint16_t qtype; // 查询类型
-    uint16_t qclass; // 查询类
-    struct dns_query* next;
-} dns_query;//查询问题区域
-
-typedef struct {
-    char* name; // 域名
-    uint16_t type; // 类型
-    uint16_t Class; // 类
-    uint32_t ttl; // 生存时间
-    uint16_t rdlength; // 资源数据长度
-    char* rdata; // 资源数据
-} dns_record;
-
-typedef struct {
-    dns_header* header;
-    dns_query* que;
-    dns_record* rr;
-} dns_packet_t;  //整个报文
-
-typedef struct cache_node {
-    dns_packet_t* query; // The query packet
-    dns_packet_t* response; // The response packet
-    time_t expire_time; // The expire time of the cache node (in seconds since epoch)
-    struct cache_node* next; // The pointer to the next cache node in the list
-} cache_node_t;
-
-typedef struct translate
+//DNS报文首部 12字节
+typedef struct DNSHeader
 {
-    char* IP;						//IP地址
-    char* domain;					//域名
-} ip_domain_trans; //DNS域名解析表
+	unsigned short ID; //标志
+	unsigned short Flags; //标识
+	unsigned short QuestionNum;  //问题数
+	unsigned short AnswerNum; //资源记录数
+	unsigned short AuthorNum; //授权资源记录数
+	unsigned short AdditionNum; //额外资源记录数
+} DNSHDR, * pDNSHDR;
 
-typedef struct ID_change
+
+//ID转换表结构
+typedef struct ID_Change
 {
-	unsigned short oldID;			//原有ID
+	unsigned short oid;			//原有ID
 	BOOL done;						//标记是否完成解析
 	SOCKADDR_IN client;				//请求者套接字地址
 } ID_trans;
 
-void getURL(char* rev, char* url);
+#endif 
 
-void setParameter(int argc, char* argv[]);
+#pragma  comment(lib, "Ws2_32.lib") //加载 ws2_32.dll
 
-SOCKET createSocket();
+void read(const char* filename);// 查找域名对应的IP地址
+const char* findIP(const char* domain); //获取DNS请求中的域名
 
-void read(const char* filename);
+void GetUrl(char* recvbuf, int recvnum);
 
-const char* findIP(const char* domain);
-extern ip_domain_trans DNS_domain_Table[AMOUNT];		//DNS域名解析表
-extern ID_trans IDTransTable[AMOUNT];	//ID转换表
-extern SYSTEMTIME TimeOfSys;
-extern int Day, Hour, Minute, Second, Milliseconds;//保存系统时间的变量
-int IDcount=0;
+unsigned short replace_id(unsigned short OldID, SOCKADDR_IN temp, BOOL ifdone);
 
-char url[lengthURL];
+void PrintInfo(unsigned short newID, const char* getIP);
+
+void setParameter(int argc,char* argv[]);
