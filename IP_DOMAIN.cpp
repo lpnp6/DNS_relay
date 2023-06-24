@@ -1,7 +1,7 @@
 #pragma warning(disable:4996)
 #include"Header.h"
 
-map<const char*, const char*>ip_domain_Map;//DNS域名解析表
+std::map<string,string>ip_domain_Map;//DNS域名解析表
 
 void read(const char* filename) {
 	FILE* file = fopen(filename, "r");
@@ -23,12 +23,11 @@ void read(const char* filename) {
 
 		ByteCount += sizeof(ip) + sizeof(domain);
 
-		std::pair<const char*, const char*>Pair;
-		Pair.first = domain;
-		Pair.second = ip;
+		string Domain(domain);
+		string Ip(ip);
 		//printf("%s   %s\n",ip,domain);
 		// 分配内存并存储IP和域名
-		ip_domain_Map.insert(Pair);
+		ip_domain_Map.insert(std::make_pair(Domain,Ip));
 		NameCount++;
 	}
 
@@ -40,8 +39,15 @@ void read(const char* filename) {
 // 查找域名对应的IP地址
 
 const char* findIP(const char* domain) {
-	auto it = ip_domain_Map.find(domain);
+	string Domain(domain);
+	string Ip = "";
+	auto it = ip_domain_Map.find(Domain);
 	if (it != ip_domain_Map.end())
-		return it->second;
+	{
+		Ip = it->second;
+		char* ptr = (char*)malloc(sizeof(IPLength + 1));
+		strcpy(ptr, Ip.c_str());
+		return ptr;
+	}
 	return NULL;
 }
