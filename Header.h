@@ -53,6 +53,10 @@ using namespace std;
 #define IPLength 16
 #define MAX_FILE_LENGTH 253
 
+#define A 1
+#define NS 2
+#define CNAME 5//以上三个表示RR，查询类型，A表示询问IP地址，NS表示要获取该域名的权威名称服务器名称，CNAME暂不知
+
 //DNS报文首部 12字节
 typedef struct DNSheader
 {
@@ -75,6 +79,34 @@ typedef struct DNSheader
 	UINT16 arCount;   //additional records section的RR个数，16位
 }DNSHDR, * pDNSHDR;
 
+typedef struct
+{
+	char* qName;	//字节数不定，以0x00作为结束符。表示查询的主机名。主机名被"."号分割成了多段标签。在QNAME中，每段标签前面加一个数字，表示接下来标签的长度。
+	UINT16 qType;	//占2个字节。表示RR类型
+	UINT16 qClass;	//占2个字节。表示RR分类
+}QUESTION;
+
+//Answer、Authority、Additional部分格式一致，每部分都由若干实体组成，每个实体即为一条RR
+typedef struct
+{
+	char* name;     //域名
+	UINT16 type;	//占2个字节。表示RR的类型，如A、CNAME、NS等
+	UINT16 rclass;	//占2个字节。表示RR的分类
+	UINT32 ttl;		//占4个字节。表示RR生命周期，即RR缓存时长，单位是秒
+	UINT16 rdLength;//占2个字节。指定RDATA字段的字节数
+	char* rData;    //资源数据
+}RR;
+
+typedef struct DnsPacket
+{
+	DNSHeader* header;
+
+	QUESTION* queries;//查询问题区域，动态分配的数组个数由qdCount决定
+	RR* answers;	//回答问题区域，动态分配的数组个数由anCount决定
+	RR* authority;	//权威名称服务器区域，动态分配的数组个数由nsCount决定
+	RR* additional;	//附加信息区域,动态分配的数组个数由arCount决定
+
+}DNS_Packet;
 
 //ID转换表结构
 typedef struct ID_Change
@@ -83,6 +115,17 @@ typedef struct ID_Change
 	BOOL done;						//标记是否完成解析
 	SOCKADDR_IN client;				//请求者套接字地址
 } ID_trans;
+
+//从上层DNS获取的资源链表结点
+typedef struct Cached
+{
+	int ttl;
+	uint32_t ipAddress;//IP地址
+	char* domainName;//域名
+	char* cName;//别名
+	struct Cached* nextCachedPtr;
+}CACHED;
+typedef CACHED* CACHED_PTR;//后续有机会再用
 
 #endif 
 
@@ -99,14 +142,6 @@ void PrintInfo(unsigned short newID, const char* getIP);
 
 void setParameter(int argc,char* argv[]); DNSHDR, * pDNSHDR;
 
-
-//ID转换表结构
-typedef struct ID_Change
-{
-	unsigned short oid;			//原有ID
-	BOOL done;						//标记是否完成解析
-	SOCKADDR_IN client;				//请求者套接字地址
-} ID_trans;
 
 #endif 
 
