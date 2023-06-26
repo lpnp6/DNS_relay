@@ -12,6 +12,7 @@ extern char DefDNSAddress[IPLength];
 extern char filePath[MAX_FILE_LENGTH];
 extern int DebugLevel;
 extern map<char*, cacheInfo>cache;//cache表
+extern bool needAdd;//当前访问的目标是否需要添加到cache
 
 int main(int argc, char** argv)
 {
@@ -37,7 +38,7 @@ int main(int argc, char** argv)
 	serverName.sin_family = AF_INET;
 	serverName.sin_port = htons(PORT);
 	serverName.sin_addr.s_addr = inet_addr(DefDNSAddress);
-		// 设置套接字超时时间
+	// 设置套接字超时时间
 	DWORD timeout = TIMEOUT;
 	setsockopt(servSock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
 	setsockopt(localSock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
@@ -130,38 +131,31 @@ int main(int argc, char** argv)
 
 				//delete pID; //释放动态分配的内存
 				free(pID);
-
-
+				clock_t start, stop; //定时
+				double duration = 0;
 				//接收来自外部DNS服务器的响应报文
+				start = clock();
+
 				bool flag = 1;
 				iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &client_len);
 				if (iRecv > 0 && DebugLevel >= 1)
 					PrintRecvInfo(clientName, &packet, ntohs(*(u_short*)recvBuf), Url, iRecv);
-				while (iRecv == 0 || iRecv == SOCKET_ERROR)
+				while ((iRecv == 0) || (iRecv == SOCKET_ERROR))
 				{
-
-
-					if (WSAGetLastError() == WSAETIMEDOUT)
-					{
-						iSend = sendto(servSock, recvBuf, iRecv, 0, (SOCKADDR*)&serverName, sizeof(serverName));
-						if (iSend == SOCKET_ERROR)
-						{
-							printf("sendto Failed: %s\n", strerror(WSAGetLastError()));
-							flag = 0;
-							break;
-						}
-					}
-					else
-					{
-						printf("recvfrom Failed: %s\n", strerror(WSAGetLastError()));
-						flag = 0;
-						break;
-					}
 					iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &client_len);
 					if (iRecv > 0 && DebugLevel >= 1)
 						PrintRecvInfo(clientName, &packet, ntohs(*(u_short*)recvBuf), Url, iRecv);
+					stop = clock();
+					duration = (double)(stop - start) / CLK_TCK;
+					if (duration > 5)
+					{
+						printf("Long Time No Response From Server.\n");
+						flag = 0;
+						continue;
+					}
 				}
-				if (flag == 1) {
+
+				if (flag == 1&&needAdd==1) {
 					DNS_Packet dns_packet;
 					parseDNSPacket(&dns_packet, recvBuf);
 
