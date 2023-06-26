@@ -1,7 +1,7 @@
 #pragma warning(disable:4996)
 #include"Header.h"
 
-std::map<string,string>ip_domain_Map;//DNS域名解析表
+std::map<string, string>ip_domain_Map;//DNS域名解析表
 
 void read(const char* filename) {
 	FILE* file = fopen(filename, "r");
@@ -27,7 +27,7 @@ void read(const char* filename) {
 		string Ip(ip);
 		//printf("%s   %s\n",ip,domain);
 		// 分配内存并存储IP和域名
-		ip_domain_Map.insert(std::make_pair(Domain,Ip));
+		ip_domain_Map.insert(std::make_pair(Domain, Ip));
 		NameCount++;
 	}
 
