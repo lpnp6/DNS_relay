@@ -98,15 +98,18 @@ void parseQuestion(QUESTION* question, UINT16 count,char* recvBuf, int* offset) 
 }
 
 void parseResourceFields(RR* resources, int count, char* recvBuf, int* offset) {
-
+		printHex(recvBuf, 200);
 	for (int i = 0; i < count; i++) {
+		memset(resources+i, 0, sizeof(resources[i]));
 		// 解析资源字段的各个字段
 		char nameBuffer[512];
 		int nameIndex = 0;
 		bool isCompressed = false;
+		int ss = 0;//判断加.
 
+		int off = *offset;
 		while (true) {
-			unsigned char labelLength = recvBuf[(*offset)++];
+			unsigned char labelLength = recvBuf[off++];
 
 			if (labelLength == 0) {
 				nameBuffer[nameIndex] = '\0';
@@ -115,58 +118,58 @@ void parseResourceFields(RR* resources, int count, char* recvBuf, int* offset) {
 
 			if ((labelLength & 0xC0) == 0xC0) {
 				// 标签长度的最两位为 1，表示使用压缩指针
-				unsigned char pointerOffset = recvBuf[*offset - 1] & 0x3F;
-				pointerOffset = (pointerOffset << 8) + recvBuf[*offset];
-				*offset += sizeof(UINT16);
+				unsigned char pointerOffset = recvBuf[off - 1] & 0x3F;
+				pointerOffset = (pointerOffset << 8) + recvBuf[off];
+				off += sizeof(unsigned char);
 				if (!isCompressed) {
 					isCompressed = true;
 					nameIndex = 0;  // 如果遇到压缩指针，重置域名索引
 				}
-				*offset = pointerOffset;
+				off = pointerOffset;
 			}
 			else {
 				// 解析标签值
+				if(ss!=0) nameBuffer[nameIndex++] = '.';
 				for (int i = 0; i < labelLength; i++) {
-					nameBuffer[nameIndex++] = recvBuf[(*offset)++];
+					nameBuffer[nameIndex++] = recvBuf[(off)++];
 				}
-				nameBuffer[nameIndex++] = '.';
+				ss++;
+				
 			}
 		}
+		*offset += sizeof(UINT16);
 
 		// 将域名复制到新的动态分配的缓冲区中
 		
 		if (nameIndex > 0) {
-			char* qName = (char*)malloc(nameIndex);
-			strncpy(qName, nameBuffer, nameIndex - 1);
-			qName[nameIndex - 1] = '\0';
+			char* qName = (char*)malloc(nameIndex+1);
+			strncpy(qName, nameBuffer, nameIndex+1);
+			qName[nameIndex] = '\0';
 			resources[i].name = qName;
 			std::cout << "qname  "<<qName << endl;
 		}
 		else
 		{
-			char qName[] = "\0";
-			resources[i].name = qName;
-			cout << "qname "<<qName << endl;
+			cout << "qname "<<" " << endl;
 		}
 
-
-		
-
+	
 		resources[i].type = ntohs(*(UINT16*)(recvBuf + *offset));
-		cout << "type;;"<<resources[i].type << endl;
+		//cout << "type;;"<<resources[i].type << endl;
 		*offset += sizeof(UINT16);
 		resources[i].rclass = ntohs(*(UINT16*)(recvBuf + *offset));
 		*offset += sizeof(UINT16);
 		resources[i].ttl = ntohl(*(UINT32*)(recvBuf + *offset));
 		*offset += sizeof(UINT32);
 		resources[i].rdLength = ntohs(*(UINT16*)(recvBuf + *offset));
-		cout << resources[i].rdLength << endl;
+		//cout << resources[i].rdLength << endl;
 		*offset += sizeof(UINT16);
-		cout <<"leng"<< resources[i].rdLength << endl;
+		//cout <<"leng"<< resources[i].rdLength << endl;
 
 		// 解析资源数据
 		resources[i].rData = (char*)malloc(resources[i].rdLength);
 		memcpy(resources[i].rData, recvBuf + *offset, resources[i].rdLength);
+		
 
 		//printHex(recvBuf,1000);
 		*offset += resources[i].rdLength;
