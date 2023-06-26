@@ -15,7 +15,7 @@ const char* handlecache(char* domainName) {
 			return it->second.ipAddress;
 		}
 		else {
-			// 没找到
+			// 没找到，标记一下等待添加。
 			needAdd = 1;
 			printf("Querying upstream DNS server for %s\n", domainName);
 			return NULL;
