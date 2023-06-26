@@ -24,6 +24,7 @@ using namespace std;
 #define lengthURL  64 //0~63
 #define IPLength 16
 #define MAX_FILE_LENGTH 253
+#define HASHSIZE 101
 
 //DNS报文首部 12字节
 #include <utility>
@@ -122,9 +123,10 @@ typedef struct Cached
 	int ttl;
 	uint32_t ipAddress;//IP地址
 	char* domainName;//域名
-	char* cName;//别名
 	struct Cached* nextCachedPtr;
 }CACHED;
+static CACHED *hashtab[HASHSIZE];
+
 typedef CACHED* CACHED_PTR;//后续有机会再用
 
 #endif 
