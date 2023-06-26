@@ -58,4 +58,4 @@ void setParameter(int argc, char* argv[])
 	}
 	printf("Name server %s:53\n", DefDNSAddress);
 	printf("Debug level %d\n", DebugLevel);
-}
+}	
