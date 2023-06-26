@@ -70,6 +70,7 @@ void PrintRecvInfo(sockaddr_in clientname,DnsPacket* packet, unsigned short ID, 
 			printf("TYPE %hu CLASS %hu", packet->queries->qType, packet->queries->qClass);
 	}
 	printf("\n");
+	printf("\n");
 }
 
 void PrintSendInfo(sockaddr_in clientname,DnsPacket *packet,unsigned short oldID,unsigned short newID, const char* getIP)
@@ -138,4 +139,5 @@ void PrintSendInfo(sockaddr_in clientname,DnsPacket *packet,unsigned short oldID
 			printf("%s\n", getIP);
 		}
 	}
+	printf("\n");
 }
