@@ -6,13 +6,14 @@ extern int IDcount;			//转换表中的条目个数
 extern char Url[lengthURL];					//域名
 extern SYSTEMTIME TimeOfSys;                     //系统时间
 extern int Day, Hour, Minute, Second, Milliseconds;//保存系统时间的变量
-extern map<string,string>ip_domain_Map;//DNS域名解析表
+extern map<string, string>ip_domain_Map;//DNS域名解析表
 extern char LocalDNSAddress[IPLength];
 extern char DefDNSAddress[IPLength];
 extern char filePath[MAX_FILE_LENGTH];
 extern int DebugLevel;
+extern map<char*, cacheInfo>cache;//cache表
 
-int main(int argc,char** argv)
+int main(int argc, char** argv)
 {
 	setParameter(argc, argv);
 	//初始化 DLL
@@ -36,6 +37,10 @@ int main(int argc,char** argv)
 	serverName.sin_family = AF_INET;
 	serverName.sin_port = htons(PORT);
 	serverName.sin_addr.s_addr = inet_addr(DefDNSAddress);
+		// 设置套接字超时时间
+	DWORD timeout = TIMEOUT;
+	setsockopt(servSock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+	setsockopt(localSock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
 
 	//绑定本地服务器地址
 	if (bind(localSock, (SOCKADDR*)&localName, sizeof(localName)))
@@ -87,9 +92,9 @@ int main(int argc,char** argv)
 		{
 			DNS_Packet packet;
 			parseDNSPacket(&packet, recvBuf);
-			//getURL(recvBuf, Url);//获取域名
+			
 			GetUrl(recvBuf, iRecv);
-			getIP = findIP(Url);	//在域名解析表中查找
+			getIP = handlecache(Url);	//在域名解析表中查找
 
 			pID = (unsigned short*)malloc(sizeof(unsigned short*));
 			memcpy(pID, recvBuf, sizeof(unsigned short)); //报文前两字节为ID
@@ -103,11 +108,11 @@ int main(int argc,char** argv)
 			//在域名解析表中没有找到
 			if (getIP == NULL)
 			{
-				
+
 				//printf("We dont find this url, will get a new ID and forward to SERVER.\n");
 				//ID转换
 				//pID = new (unsigned short);
-				
+
 				NewID = htons(replace_id(ntohs(*pID), clientName, FALSE));
 				memcpy(recvBuf, &NewID, sizeof(unsigned short));
 
@@ -125,27 +130,59 @@ int main(int argc,char** argv)
 
 				//delete pID; //释放动态分配的内存
 				free(pID);
-				clock_t start, stop; //定时
-				double duration = 0;
+
 
 				//接收来自外部DNS服务器的响应报文
-				start = clock();
+				bool flag = 1;
 				iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &client_len);
 				if (iRecv > 0 && DebugLevel >= 1)
 					PrintRecvInfo(clientName, &packet, ntohs(*(u_short*)recvBuf), Url, iRecv);
-				while ((iRecv == 0) || (iRecv == SOCKET_ERROR))
+				while (iRecv == 0 || iRecv == SOCKET_ERROR)
 				{
+
+
+					if (WSAGetLastError() == WSAETIMEDOUT)
+					{
+						iSend = sendto(servSock, recvBuf, iRecv, 0, (SOCKADDR*)&serverName, sizeof(serverName));
+						if (iSend == SOCKET_ERROR)
+						{
+							printf("sendto Failed: %s\n", strerror(WSAGetLastError()));
+							flag = 0;
+							break;
+						}
+					}
+					else
+					{
+						printf("recvfrom Failed: %s\n", strerror(WSAGetLastError()));
+						flag = 0;
+						break;
+					}
 					iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &client_len);
 					if (iRecv > 0 && DebugLevel >= 1)
 						PrintRecvInfo(clientName, &packet, ntohs(*(u_short*)recvBuf), Url, iRecv);
-					stop = clock();
-					duration = (double)(stop - start) / CLK_TCK;
-					if (duration > 5)
-					{
-						printf("Long Time No Response From Server.\n");
-						continue;
-					}
 				}
+				if (flag == 1) {
+					DNS_Packet dns_packet;
+					parseDNSPacket(&dns_packet, recvBuf);
+
+					if (dns_packet.header->anCount > 0) {
+						char* ip = (char*)malloc(sizeof(char) * 40);
+						if (dns_packet.queries->qType == 1)
+						{
+							inet_ntop(AF_INET, dns_packet.answers->rData, ip, INET_ADDRSTRLEN);
+						}
+						else if (dns_packet.queries->qType == 28)
+						{
+							inet_ntop(AF_INET6, dns_packet.answers->rData, ip, INET6_ADDRSTRLEN);
+						}
+						else { ip[0] = '\0'; }
+						cacheInfo ci = { 100,ip };
+						cache.insert(make_pair(Url,ci));
+						cout << ip << endl;
+
+				}
+			}
+				
 				//ID转换
 				pID = (unsigned short*)malloc(sizeof(unsigned short*));
 				memcpy(pID, recvBuf, sizeof(unsigned short)); //报文前两字节为ID
@@ -176,7 +213,7 @@ int main(int argc,char** argv)
 				else if (iSend == 0)
 					break;
 				else if (iSend > 0 && DebugLevel > 0)
-					PrintSendInfo(clientName,&packet, *pID, oID, getIP);
+					PrintSendInfo(clientName, &packet, *pID, oID, getIP);
 				free(pID); //释放动态分配的内存
 			}
 
