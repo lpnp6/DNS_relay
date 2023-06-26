@@ -1,8 +1,8 @@
 #include "Header.h"
 
-void printBinary(const char* data,int a) {
+void printBinary(const char* data, int a) {
 	// 遍历字符数组，直到遇到空字符 '\0'
-	for (int i = 0; i<a; i++) {
+	for (int i = 0; i < a; i++) {
 		unsigned char c = (unsigned char)data[i];
 		// 逐位输出每个字符的二进制表示
 		for (int j = 7; j >= 0; j--) {
@@ -22,10 +22,10 @@ void printHex(const char* data, size_t length) {
 }
 
 // 解析DNS报头并将解析结果存储在DNSHDR结构中
-void parseDNSHeader(DNSHDR* dnsHeader,char*recvBuf) {
+void parseDNSHeader(DNSHDR* dnsHeader, char* recvBuf) {
 	// 解析ID字段
 
-	dnsHeader->id = ntohs(*(UINT16*)(recvBuf ));
+	dnsHeader->id = ntohs(*(UINT16*)(recvBuf));
 
 	// 解析标志字段
 
@@ -41,24 +41,24 @@ void parseDNSHeader(DNSHDR* dnsHeader,char*recvBuf) {
 
 
 	// 解析问题计数字段
-	dnsHeader->qdCount = ntohs( * (UINT16*)(recvBuf + 4));
+	dnsHeader->qdCount = ntohs(*(UINT16*)(recvBuf + 4));
 
 
 	// 解析回答计数字段
-	dnsHeader->anCount = ntohs( * (UINT16*)(recvBuf + 6));
+	dnsHeader->anCount = ntohs(*(UINT16*)(recvBuf + 6));
 
 	// 解析授权记录计数字段
-	dnsHeader->nsCount = ntohs( * (UINT16*)(recvBuf + 8));
+	dnsHeader->nsCount = ntohs(*(UINT16*)(recvBuf + 8));
 
 	// 解析附加记录计数字段
-	dnsHeader->arCount = ntohs( * (UINT16*)(recvBuf + 10));
+	dnsHeader->arCount = ntohs(*(UINT16*)(recvBuf + 10));
 
 }
 
 
 
 // 解析问题字段
-void parseQuestion(QUESTION* question, UINT16 count,char* recvBuf, int* offset) {
+void parseQuestion(QUESTION* question, UINT16 count, char* recvBuf, int* offset) {
 
 	for (int i = 0; i < count; i++) {
 		int qNameLength = 0;
@@ -98,9 +98,9 @@ void parseQuestion(QUESTION* question, UINT16 count,char* recvBuf, int* offset) 
 }
 
 void parseResourceFields(RR* resources, int count, char* recvBuf, int* offset) {
-		printHex(recvBuf, 200);
+	//printHex(recvBuf, 200);
 	for (int i = 0; i < count; i++) {
-		memset(resources+i, 0, sizeof(resources[i]));
+		memset(resources + i, 0, sizeof(resources[i]));
 		// 解析资源字段的各个字段
 		char nameBuffer[512];
 		int nameIndex = 0;
@@ -129,31 +129,31 @@ void parseResourceFields(RR* resources, int count, char* recvBuf, int* offset) {
 			}
 			else {
 				// 解析标签值
-				if(ss!=0) nameBuffer[nameIndex++] = '.';
+				if (ss != 0) nameBuffer[nameIndex++] = '.';
 				for (int i = 0; i < labelLength; i++) {
 					nameBuffer[nameIndex++] = recvBuf[(off)++];
 				}
 				ss++;
-				
+
 			}
 		}
 		*offset += sizeof(UINT16);
 
 		// 将域名复制到新的动态分配的缓冲区中
-		
+
 		if (nameIndex > 0) {
-			char* qName = (char*)malloc(nameIndex+1);
-			strncpy(qName, nameBuffer, nameIndex+1);
+			char* qName = (char*)malloc(nameIndex + 1);
+			strncpy(qName, nameBuffer, nameIndex + 1);
 			qName[nameIndex] = '\0';
 			resources[i].name = qName;
-			std::cout << "qname  "<<qName << endl;
+			std::cout << "qname  " << qName << endl;
 		}
 		else
 		{
-			cout << "qname "<<" " << endl;
+			cout << "qname " << " " << endl;
 		}
 
-	
+
 		resources[i].type = ntohs(*(UINT16*)(recvBuf + *offset));
 		//cout << "type;;"<<resources[i].type << endl;
 		*offset += sizeof(UINT16);
@@ -169,7 +169,7 @@ void parseResourceFields(RR* resources, int count, char* recvBuf, int* offset) {
 		// 解析资源数据
 		resources[i].rData = (char*)malloc(resources[i].rdLength);
 		memcpy(resources[i].rData, recvBuf + *offset, resources[i].rdLength);
-		
+
 
 		//printHex(recvBuf,1000);
 		*offset += resources[i].rdLength;
@@ -181,12 +181,12 @@ void parseDNSPacket(DNS_Packet* packet, char* recvBuf) {
 
 	// 解析 DNS 报头
 	packet->header = (DNSHDR*)malloc(sizeof(DNSHDR));
-	parseDNSHeader(packet->header,recvBuf);
+	parseDNSHeader(packet->header, recvBuf);
 	offset += sizeof(DNSHDR);
 
 	// 解析问题字段
 	packet->queries = (QUESTION*)malloc(sizeof(QUESTION) * ntohs(packet->header->qdCount));
-	parseQuestion(packet->queries,packet->header->qdCount, recvBuf, &offset);
+	parseQuestion(packet->queries, packet->header->qdCount, recvBuf, &offset);
 
 	// 解析回答字段
 	packet->answers = (RR*)malloc(sizeof(RR) * ntohs(packet->header->anCount));
