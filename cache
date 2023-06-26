@@ -12,7 +12,26 @@ void addToCache(CACHED *newEntry) {
     newEntry->nextCachedPtr = cacheHead;
     cacheHead = newEntry;
 }
-void handleDnsRequest(char *domainName) {
+void removeFromCache(CACHED *entry) {
+    if (cacheHead == entry) {
+        cacheHead = entry->nextCachedPtr;
+        free(entry);
+        return;
+    }
+void updateCacheTtl() {
+    CACHED *current = cacheHead;
+    while (current != NULL) {
+        current->ttl--;
+        if (current->ttl <= 0) {
+            CACHED *next = current->nextCachedPtr;
+            removeFromCache(current);
+            current = next;
+        } else {
+            current = current->nextCachedPtr;
+        }
+    }
+}
+void handleDnsRequest(char *domainName，uint32_t ip) {
     CACHED *cacheEntry = findInCache(domainName);
     if (cacheEntry != NULL && cacheEntry->ttl > 0) {
         // Use cached result
@@ -25,6 +44,7 @@ void handleDnsRequest(char *domainName) {
         CACHED *newEntry = malloc(sizeof(CACHED));
         newEntry->ttl = 100; // Set TTL value as needed
         newEntry->domainName = strdup(domainName);
+        newEntry->ipAddress=ip;
         addToCache(newEntry);
     }
 }
