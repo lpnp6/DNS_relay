@@ -25,7 +25,7 @@ void read(const char* filename) {
 
 		string Domain(domain);
 		string Ip(ip);
-		//printf("%s   %s\n",ip,domain);
+		
 		// 分配内存并存储IP和域名
 		ip_domain_Map.insert(std::make_pair(Domain, Ip));
 		NameCount++;
@@ -34,7 +34,6 @@ void read(const char* filename) {
 	printf("%d names, occupy %d bytes memory\n ", NameCount, ByteCount);
 
 	fclose(file);
-	//return NameCount;
 }
 // 查找域名对应的IP地址
 
