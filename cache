@@ -161,27 +161,33 @@ void updateCacheTtl() {
 	}
 }
 //这块函数添加到main函数里面
-char* handlecache(char* domainName) {
-	CACHED* cacheEntry = findInCache(domainName);
-	if (cacheEntry != NULL && cacheEntry->ttl > 0) {
-		// 找到了
-		printf("Using cached result for %s\n", domainName);
-		return cacheEntry->ipAddress;
+const char* handlecache(char* domainName) {
+	const char* getip = findIP(domainName);
+	if(getip==NULL)//先在本地找，没找到去cache找
+	{
+		CACHED* cacheEntry = findInCache(domainName);
+		if (cacheEntry != NULL && cacheEntry->ttl > 0) {
+			// 找到了
+			printf("Using cached result for %s\n", domainName);
+			return cacheEntry->ipAddress;
+		}
+		else {
+			// 没找到
+			printf("Querying upstream DNS server for %s\n", domainName);
+			//调用dns服务器代码省略
+			// 添加到cache；
+			CACHED* newEntry = (CACHED*)malloc(sizeof(CACHED));
+			newEntry->ttl = 100; // Set TTL value as needed
+			newEntry->domainName = strdup(domainName);
+			newEntry->ipAddress = (char*)findIP(domainName);
+			addToCache(newEntry);
+			return newEntry->ipAddress;
+		}
 	}
-	else {
-		// 没找到
-		printf("Querying upstream DNS server for %s\n", domainName);
-		//调用dns服务器代码省略
-		// 添加到cache；
-		CACHED* newEntry = (CACHED*)malloc(sizeof(CACHED));
-		newEntry->ttl = 100; // Set TTL value as needed
-		newEntry->domainName = strdup(domainName);
-		newEntry->ipAddress = (char*)findIP(domainName);
-		addToCache(newEntry);
-		return newEntry->ipAddress;
-	}
-}
 
+	return getip;
+	
+}
 
 
 */
