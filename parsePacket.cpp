@@ -47,7 +47,6 @@ void parseDNSHeader(DNSHDR* dnsHeader,char*recvBuf) {
 	// 解析回答计数字段
 	dnsHeader->anCount = ntohs( * (UINT16*)(recvBuf + 6));
 
-;
 	// 解析授权记录计数字段
 	dnsHeader->nsCount = ntohs( * (UINT16*)(recvBuf + 8));
 
