@@ -6,7 +6,7 @@ extern int IDcount;			//转换表中的条目个数
 extern char Url[lengthURL];					//域名
 extern SYSTEMTIME TimeOfSys;                     //系统时间
 extern int Day, Hour, Minute, Second, Milliseconds;//保存系统时间的变量
-extern map<const char*, const char*>ip_domain_Map;//DNS域名解析表
+extern map<string,string>ip_domain_Map;//DNS域名解析表
 extern char LocalDNSAddress[IPLength];
 extern char DefDNSAddress[IPLength];
 extern char filePath[MAX_FILE_LENGTH];
@@ -85,10 +85,16 @@ int main(int argc,char** argv)
 		}
 		else
 		{
+			DNS_Packet packet;
+			parseDNSPacket(&packet, recvBuf);
 			//getURL(recvBuf, Url);//获取域名
 			GetUrl(recvBuf, iRecv);
-			getIP = findIP(Url);		//在域名解析表中查找
+			getIP = findIP(Url);	//在域名解析表中查找
 
+			pID = (unsigned short*)malloc(sizeof(unsigned short*));
+			memcpy(pID, recvBuf, sizeof(unsigned short)); //报文前两字节为ID
+			if (DebugLevel >= 1)
+				PrintRecvInfo(clientName, &packet, ntohs(*pID), Url, iRecv);
 			//printf("We have get the url: %s\n", Url);
 
 			//printf("%d\n", find);
@@ -97,16 +103,13 @@ int main(int argc,char** argv)
 			//在域名解析表中没有找到
 			if (getIP == NULL)
 			{
+				
 				//printf("We dont find this url, will get a new ID and forward to SERVER.\n");
 				//ID转换
 				//pID = new (unsigned short);
-				pID = (unsigned short*)malloc(sizeof(unsigned short*));
-				memcpy(pID, recvBuf, sizeof(unsigned short)); //报文前两字节为ID
+				
 				NewID = htons(replace_id(ntohs(*pID), clientName, FALSE));
 				memcpy(recvBuf, &NewID, sizeof(unsigned short));
-
-				//打印 时间 newID 功能 域名 IP
-				PrintInfo(ntohs(NewID), getIP);
 
 				//把recvbuf转发至指定的外部DNS服务器
 				iSend = sendto(servSock, recvBuf, iRecv, 0, (SOCKADDR*)&serverName, sizeof(serverName));
@@ -117,6 +120,8 @@ int main(int argc,char** argv)
 				}
 				else if (iSend == 0)
 					break;
+				else if (iSend > 0 && DebugLevel >= 1)
+					PrintSendInfo(serverName, &packet, *pID, NewID, getIP);
 
 				//delete pID; //释放动态分配的内存
 				free(pID);
@@ -126,9 +131,13 @@ int main(int argc,char** argv)
 				//接收来自外部DNS服务器的响应报文
 				start = clock();
 				iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &client_len);
+				if (iRecv > 0 && DebugLevel >= 1)
+					PrintRecvInfo(clientName, &packet, ntohs(*(u_short*)recvBuf), Url, iRecv);
 				while ((iRecv == 0) || (iRecv == SOCKET_ERROR))
 				{
 					iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &client_len);
+					if (iRecv > 0 && DebugLevel >= 1)
+						PrintRecvInfo(clientName, &packet, ntohs(*(u_short*)recvBuf), Url, iRecv);
 					stop = clock();
 					duration = (double)(stop - start) / CLK_TCK;
 					if (duration > 5)
@@ -150,7 +159,7 @@ int main(int argc,char** argv)
 				//char* NewIP;
 
 				//打印 时间 newID 功能 域名 IP
-				PrintInfo(ntohs(NewID), getIP);
+				//PrintInfo(ntohs(NewID), getIP);
 
 				//从ID转换表中获取发出DNS请求者的信息
 				clientName = id_trans_table[GetId].client;
@@ -166,7 +175,8 @@ int main(int argc,char** argv)
 				}
 				else if (iSend == 0)
 					break;
-
+				else if (iSend > 0 && DebugLevel > 0)
+					PrintSendInfo(clientName,&packet, *pID, oID, getIP);
 				free(pID); //释放动态分配的内存
 			}
 
@@ -175,16 +185,13 @@ int main(int argc,char** argv)
 			{
 				//printf("We have find this url.\n");
 				//获取请求报文的ID
-				pID = (unsigned short*)malloc(sizeof(unsigned short*));
-				memcpy(pID, recvBuf, sizeof(unsigned short));
-
-				//转换ID
 				unsigned short nID = replace_id(ntohs(*pID), clientName, FALSE);
 
 				//printf("We have get a new ID, now we will create an answer.\n");
 
 				//打印 时间 newID 功能 域名 IP
-				PrintInfo(nID, getIP);
+				//if (DebugLevel >= 1)
+					//PrintRecvInfo(clientName,packet,ntohs(pID),ntohl(NewID),Url);
 
 				//构造响应报文头
 				memcpy(sendBuf, recvBuf, iRecv); //拷贝请求报文
@@ -235,6 +242,8 @@ int main(int argc,char** argv)
 
 
 				iSend = sendto(localSock, sendBuf, curLen, 0, (SOCKADDR*)&clientName, sizeof(clientName));
+				if (iSend > 0)
+					PrintSendInfo(clientName, &packet, *pID, nID, getIP);
 
 
 				free(pID); //释放动态分配的内存
