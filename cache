@@ -181,7 +181,7 @@ const char* handlecache(char* domainName) {
 			newEntry->domainName = strdup(domainName);
 			newEntry->ipAddress = (char*)findIP(domainName);
 			addToCache(newEntry);
-			return newEntry->ipAddress;
+			return NULL;
 		}
 	}
 
