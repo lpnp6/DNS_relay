@@ -1,0 +1,30 @@
+CACHED *findInCache(char *domainName) {
+    CACHED *current = cacheHead;
+    while (current != NULL) {
+        if (strcmp(current->domainName, domainName) == 0) {
+            return current;
+        }
+        current = current->nextCachedPtr;
+    }
+    return NULL;
+}//找cache里面有没有
+void addToCache(CACHED *newEntry) {
+    newEntry->nextCachedPtr = cacheHead;
+    cacheHead = newEntry;
+}
+void handleDnsRequest(char *domainName) {
+    CACHED *cacheEntry = findInCache(domainName);
+    if (cacheEntry != NULL && cacheEntry->ttl > 0) {
+        // Use cached result
+        printf("Using cached result for %s\n", domainName);
+    } else {
+        // Query upstream DNS server and get result
+        printf("Querying upstream DNS server for %s\n", domainName);
+
+        // Add result to cache
+        CACHED *newEntry = malloc(sizeof(CACHED));
+        newEntry->ttl = 100; // Set TTL value as needed
+        newEntry->domainName = strdup(domainName);
+        addToCache(newEntry);
+    }
+}
