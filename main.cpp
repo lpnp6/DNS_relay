@@ -12,7 +12,7 @@ extern char DefDNSAddress[IPLength];
 extern char filePath[MAX_FILE_LENGTH];
 extern int DebugLevel;
 extern map<char*, cacheInfo>cache;//cache表
-extern bool needAdd;//当前访问的目标是否需要添加到cache
+extern bool needAdd;
 
 int main(int argc, char** argv)
 {
@@ -38,10 +38,6 @@ int main(int argc, char** argv)
 	serverName.sin_family = AF_INET;
 	serverName.sin_port = htons(PORT);
 	serverName.sin_addr.s_addr = inet_addr(DefDNSAddress);
-	// 设置套接字超时时间
-	DWORD timeout = TIMEOUT;
-	setsockopt(servSock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
-	setsockopt(localSock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
 
 	//绑定本地服务器地址
 	if (bind(localSock, (SOCKADDR*)&localName, sizeof(localName)))
@@ -75,19 +71,15 @@ int main(int argc, char** argv)
 		memset(recvBuf, 0, BUFSIZE); //将接收缓存先置为全0
 
 		//接收DNS请求
-		//函数：int recvfrom(int s, void* buf, int len, unsigned int flags, struct sockaddr* from, int* fromlen);
-		//函数说明：recv()用来接收远程主机经指定的socket 传来的数据, 并把数据存到由参数buf 指向的内存空间, 参数len 为可接收数据的最大长度.
-		//参数flags 一般设0, 其他数值定义请参考recv().参数from 用来指定欲传送的网络地址, 结构sockaddr 请参考bind().参数fromlen 为sockaddr 的结构长度.
 		iRecv = recvfrom(localSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &client_len);
 		//错误反馈
 		if (iRecv == SOCKET_ERROR)
 		{
-			//printf("Recvfrom Failed: %s\n", strerror(WSAGetLastError()));
-			continue; //强制开始下一次循环
+			continue; 
 		}
 		else if (iRecv == 0)
 		{
-			break; //没东西，跳出循环0
+			break; //循环结束
 		}
 		else
 		{
@@ -95,25 +87,16 @@ int main(int argc, char** argv)
 			parseDNSPacket(&packet, recvBuf);
 			
 			GetUrl(recvBuf, iRecv);
-			getIP = handlecache(Url);	//在域名解析表中查找
+			getIP = handlecache(Url);	
 
 			pID = (unsigned short*)malloc(sizeof(unsigned short*));
 			memcpy(pID, recvBuf, sizeof(unsigned short)); //报文前两字节为ID
 			if (DebugLevel >= 1)
 				PrintRecvInfo(clientName, &packet, ntohs(*pID), Url, iRecv);
-			//printf("We have get the url: %s\n", Url);
-
-			//printf("%d\n", find);
-
-			//开始分情况讨论
+			
 			//在域名解析表中没有找到
 			if (getIP == NULL)
 			{
-
-				//printf("We dont find this url, will get a new ID and forward to SERVER.\n");
-				//ID转换
-				//pID = new (unsigned short);
-
 				NewID = htons(replace_id(ntohs(*pID), clientName, FALSE));
 				memcpy(recvBuf, &NewID, sizeof(unsigned short));
 
@@ -129,7 +112,6 @@ int main(int argc, char** argv)
 				else if (iSend > 0 && DebugLevel >= 1)
 					PrintSendInfo(serverName, &packet, *pID, NewID, getIP);
 
-				//delete pID; //释放动态分配的内存
 				free(pID);
 				clock_t start, stop; //定时
 				double duration = 0;
@@ -154,7 +136,7 @@ int main(int argc, char** argv)
 						continue;
 					}
 				}
-
+				//接收到了，且需要添加入cache；
 				if (flag == 1&&needAdd==1) {
 					DNS_Packet dns_packet;
 					parseDNSPacket(&dns_packet, recvBuf);
@@ -185,17 +167,8 @@ int main(int argc, char** argv)
 				memcpy(recvBuf, &oID, sizeof(unsigned short));
 				id_trans_table[GetId].done = TRUE;
 
-				//char* urlname;
-				//memcpy(urlname, &(recvBuf[sizeof(DNSHDR)]), iRecv - 12);	//获取请求报文中的域名表示，要去掉DNS报文首部的12字节
-				//char* NewIP;
-
-				//打印 时间 newID 功能 域名 IP
-				//PrintInfo(ntohs(NewID), getIP);
-
 				//从ID转换表中获取发出DNS请求者的信息
 				clientName = id_trans_table[GetId].client;
-
-				//printf("We get a answer from SERVER, now we give it back to client.\n");
 
 				//把recvbuf转发至请求者处
 				iSend = sendto(localSock, recvBuf, iRecv, 0, (SOCKADDR*)&clientName, sizeof(clientName));
@@ -214,11 +187,8 @@ int main(int argc, char** argv)
 			//在域名解析表中找到
 			else
 			{
-				//printf("We have find this url.\n");
 				//获取请求报文的ID
 				unsigned short nID = replace_id(ntohs(*pID), clientName, FALSE);
-
-				//printf("We have get a new ID, now we will create an answer.\n");
 
 				//打印 时间 newID 功能 域名 IP
 				//if (DebugLevel >= 1)
@@ -229,17 +199,16 @@ int main(int argc, char** argv)
 				unsigned short AFlag = htons(0x8180); //htons的功能：将主机字节序转换为网络字节序，即大端模式(big-endian) 0x8180为DNS响应报文的标志Flags字段
 				memcpy(&sendBuf[2], &AFlag, sizeof(unsigned short)); //修改标志域,绕开ID的两字节
 
-				//修改回答数域
-
+				//修改回答数
 				if (strcmp(getIP, "0.0.0.0") == 0)
-					AFlag = htons(0x0000);	//屏蔽功能：回答数为0
+					AFlag = htons(0x0000);	//屏蔽：回答数为0
 				else
-					AFlag = htons(0x0001);	//服务器功能：回答数为1
+					AFlag = htons(0x0001);	//正常服务器：回答数为1
 				memcpy(&sendBuf[6], &AFlag, sizeof(unsigned short)); //修改回答记录数，绕开ID两字节、Flags两字节、问题记录数两字节
 
 				int curLen = 0; //不断更新的长度
 
-				//构造DNS响应部分
+				//DNS响应部分
 				char answer[16];
 				unsigned short Name = htons(0xc00c); //域名指针（偏移量）
 				memcpy(answer, &Name, sizeof(unsigned short));
@@ -253,7 +222,7 @@ int main(int argc, char** argv)
 				memcpy(answer + curLen, &ClassA, sizeof(unsigned short));
 				curLen += sizeof(unsigned short);
 
-				//TTL四字节
+				//TTL
 				unsigned long timeLive = htonl(0x7b); //生存时间
 				memcpy(answer + curLen, &timeLive, sizeof(unsigned long));
 				curLen += sizeof(unsigned long);
@@ -267,8 +236,7 @@ int main(int argc, char** argv)
 				curLen += sizeof(unsigned long);
 				curLen += iRecv;
 
-
-				//请求报文和响应部分共同组成DNS响应报文存入sendbuf
+				//请求报文和响应组成DNS响应报文存入sendbuf
 				memcpy(sendBuf + iRecv, answer, curLen);
 
 
@@ -277,9 +245,8 @@ int main(int argc, char** argv)
 					PrintSendInfo(clientName, &packet, *pID, nID, getIP);
 
 
-				free(pID); //释放动态分配的内存
+				free(pID); 
 
-				//printf("\nThis loop is over, thanks.\n\n");
 			}
 		}
 	}
