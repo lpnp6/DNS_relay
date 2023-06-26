@@ -3,7 +3,7 @@
 
 
 map<char*,cacheInfo> cache;
-
+bool needAdd = 0;  //当前访问的目标是否需要添加到cache
 const char* handlecache(char* domainName) {
 	const char* getip = findIP(domainName);
 	if (getip == NULL)//先在本地找，没找到去cache找
@@ -16,6 +16,7 @@ const char* handlecache(char* domainName) {
 		}
 		else {
 			// 没找到
+			needAdd = 1;
 			printf("Querying upstream DNS server for %s\n", domainName);
 			return NULL;
 		}
