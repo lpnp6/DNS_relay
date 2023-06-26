@@ -9,7 +9,7 @@
 #include <time.h>
 using namespace std;
 #include <map>
-
+#include <thread>
 #pragma once
 
 #define BUFSIZE 1024 //最大报文缓存大小
@@ -22,6 +22,7 @@ using namespace std;
 #define IPLength 16
 #define MAX_FILE_LENGTH 253
 #define TIMEOUT 5000  // 超时时间设置为5秒
+#define threadNum 5
 
 //DNS报文首部 12字节
 #include <utility>
@@ -140,3 +141,4 @@ void parseDNSHeader(DNSHDR* dnsHeader, char* recvBuf);
 void parseQuestion(QUESTION* question, UINT16 count, char* recvBuf, int* offset);
 void parseResourceFields(RR* resources, int count, char* recvBuf, int* offset);
 void parseDNSPacket(DNS_Packet* packet, char* recvBuf);
+void newthread(int i,SOCKET servSock, SOCKET localSock, SOCKADDR_IN serverName, SOCKADDR_IN clientName, char* recvBuf, int iRecv, int client_len);
