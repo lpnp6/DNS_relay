@@ -43,7 +43,7 @@ unsigned short replace_id(unsigned short OldID, SOCKADDR_IN temp, BOOL ifdone)
 	return (unsigned short)(IDcount - 1);	//以表中下标作为新的ID
 }
 
-void PrintRecvInfo(sockaddr_in clientname,DnsPacket* packet, unsigned short ID, const char* url,int iecv)
+void PrintRecvInfo(sockaddr_in clientname, DnsPacket* packet, unsigned short ID, const char* url, int iecv)
 {
 	//打印时间
 	GetLocalTime(&TimeOfSys);
@@ -61,9 +61,9 @@ void PrintRecvInfo(sockaddr_in clientname,DnsPacket* packet, unsigned short ID, 
 	if (DebugLevel >= 2)
 	{
 		printf("(%d bytes)", iecv);
-		printHex((char*)packet,iecv);
-		printf("ID %04X, QR %d, OPCODE %d, AA %d, TC %d, RD %d, RA %d, Z %d, RCODE %d\n QDCOUNT %hu, ANCOUNT %hu, NSCOUNT %hu, ARCOUNT %hu\n ",packet->header->id,packet->header->qr,packet->header->opCode,packet->header->aa,packet->header->tc,packet->header->rd,packet->header->ra,packet->header->z,
-		packet->header->rCode,packet->header->qdCount,packet->header->anCount,packet->header->nsCount,packet->header->arCount);
+		printHex((char*)packet, iecv);
+		printf("ID %04X, QR %d, OPCODE %d, AA %d, TC %d, RD %d, RA %d, Z %d, RCODE %d\n QDCOUNT %hu, ANCOUNT %hu, NSCOUNT %hu, ARCOUNT %hu\n ", packet->header->id, packet->header->qr, packet->header->opCode, packet->header->aa, packet->header->tc, packet->header->rd, packet->header->ra, packet->header->z,
+			packet->header->rCode, packet->header->qdCount, packet->header->anCount, packet->header->nsCount, packet->header->arCount);
 		if (clientname.sin_port == 53)
 			printf("TYPE %hu CLASS %hu", packet->answers->type, packet->answers->rclass);
 		else
@@ -73,7 +73,7 @@ void PrintRecvInfo(sockaddr_in clientname,DnsPacket* packet, unsigned short ID, 
 	printf("\n");
 }
 
-void PrintSendInfo(sockaddr_in clientname,DnsPacket *packet,unsigned short oldID,unsigned short newID, const char* getIP)
+void PrintSendInfo(sockaddr_in clientname, DnsPacket* packet, unsigned short oldID, unsigned short newID, const char* getIP)
 {
 	//打印时间
 	GetLocalTime(&TimeOfSys);
@@ -90,7 +90,7 @@ void PrintSendInfo(sockaddr_in clientname,DnsPacket *packet,unsigned short oldID
 	if (getIP == NULL)
 	{
 		//中继功能
-		printf("Send to %s:53",DEF_DNS_ADDRESS);
+		printf("Send to %s:53", DEF_DNS_ADDRESS);
 
 		printf("    ");
 		//打印域名
@@ -125,7 +125,7 @@ void PrintSendInfo(sockaddr_in clientname,DnsPacket *packet,unsigned short oldID
 		else
 		{
 			//服务器功能
-			printf("Send to %s:%d",LOCAL_DNS_ADDRESS,clientname.sin_port);
+			printf("Send to %s:%d", LOCAL_DNS_ADDRESS, clientname.sin_port);
 			printf("    ");
 			//打印域名
 			if (DebugLevel >= 2)
