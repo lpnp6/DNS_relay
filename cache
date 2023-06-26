@@ -1,89 +1,18 @@
-
-#define HASHSIZE 1000
-typedef struct Cached
-{
-	int ttl;
-	char* ipAddress;//IP地址
-	char* domainName;//域名
-	struct Cached* nextCachedPtr;
-}CACHED;
-static CACHED* cache[HASHSIZE];
+#include "Header.h"
+#pragma warning(disable:4996)
 
 
-unsigned int hashfunc(char* str) {
-	unsigned int hash = 5381;
-	int c;
+map<char*,cacheInfo> cache;
 
-	while (c = *str++) {
-		hash = ((hash << 5) + hash) + c;
-	}
-
-	return hash % HASHSIZE;
-}
-
-CACHED* findInCache(char* domainName) {
-	unsigned int index = hashfunc(domainName);
-	CACHED* current = cache[index];
-	while (current != NULL) {
-		if (strcmp(current->domainName, domainName) == 0) {
-			return current;
-		}
-		current = current->nextCachedPtr;
-	}
-	return NULL;
-}
-
-void addToCache(CACHED* newEntry) {
-	unsigned int index = hashfunc(newEntry->domainName);
-	newEntry->nextCachedPtr = cache[index];
-	cache[index] = newEntry;
-}
-
-void removeFromCache(CACHED* entry) {
-	unsigned int index = hashfunc(entry->domainName);
-	if (cache[index] == entry) {
-		cache[index] = entry->nextCachedPtr;
-		free(entry);
-		return;
-	}
-
-	CACHED* current = cache[index];
-	while (current != NULL && current->nextCachedPtr != entry) {
-		current = current->nextCachedPtr;
-	}
-
-	if (current != NULL) {
-		current->nextCachedPtr = entry->nextCachedPtr;
-		free(entry);
-	}
-}
-
-void updateCacheTtl() {
-	for (int i = 0; i < HASHSIZE; i++) {
-		CACHED* current = cache[i];
-		while (current != NULL) {
-			current->ttl--;
-			if (current->ttl <= 0) {
-				CACHED* next = current->nextCachedPtr;
-				removeFromCache(current);
-				current = next;
-			}
-			else {
-				current = current->nextCachedPtr;
-			}
-		}
-	}
-}
-//这块函数添加到main函数里面
 const char* handlecache(char* domainName) {
 	const char* getip = findIP(domainName);
-	if(getip==NULL)//先在本地找，没找到去cache找
+	if (getip == NULL)//先在本地找，没找到去cache找
 	{
-		CACHED* cacheEntry = findInCache(domainName);
-		if (cacheEntry != NULL && cacheEntry->ttl > 0) {
-			// 找到了
+		auto it = cache.find(domainName);
+		if (it != cache.end())// 找到了
+		{
 			printf("Using cached result for %s\n", domainName);
-			return cacheEntry->ipAddress;
+			return it->second.ipAddress;
 		}
 		else {
 			// 没找到
@@ -91,69 +20,5 @@ const char* handlecache(char* domainName) {
 			return NULL;
 		}
 	}
-
 	return getip;
-	
-}
-
-//在主函数中的用法：把findIP改为handlecache即可
-//向cache添加内容的用法如下：
-//接收来自外部DNS服务器的响应报文
-				
-iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &client_len);
-
-bool flag = 1;
-while ((iRecv == 0) || (iRecv == SOCKET_ERROR))
-{
-
-
-	if (WSAGetLastError() == WSAETIMEDOUT)
-	{
-		iSend = sendto(servSock, recvBuf, iRecv, 0, (SOCKADDR*)&serverName, sizeof(serverName));
-		if (iSend == SOCKET_ERROR)
-		{
-			printf("sendto Failed: %s\n", strerror(WSAGetLastError()));
-			flag = 0;
-			break;
-		}
-	}
-	else
-	{
-		printf("recvfrom Failed: %s\n", strerror(WSAGetLastError()));
-		flag = 0;
-		break;
-	}
-	iRecv = recvfrom(servSock, recvBuf, sizeof(recvBuf), 0, (SOCKADDR*)&clientName, &client_len);
-}
-if (flag == 1) {
-	DNS_Packet dns_packet;
-	parseDNSPacket(&dns_packet, recvBuf);
-
-	////int offset = 0;
-	DNSheader* dnsHeader = dns_packet.header;
-		/*printf("QDCount: %u\n", dnsHeader->qdCount);
-		printf("ANCount: %u\n", dnsHeader->anCount);
-		printf("NSCount: %u\n", dnsHeader->nsCount);
-		printf("ARCount: %u\n", dnsHeader->arCount);*/
-
-	if (dnsHeader->anCount > 0) {
-		char* ip = (char*)malloc(sizeof(char) * 40);
-		if (dns_packet.queries->qType == 1)
-		{
-			inet_ntop(AF_INET, dns_packet.answers->rData, ip, INET_ADDRSTRLEN);
-		}
-		else if (dns_packet.queries->qType == 28)
-		{
-			inet_ntop(AF_INET6, dns_packet.answers->rData, ip, INET6_ADDRSTRLEN);
-		}
-		else { ip[0] = '\0'; }
-		
-		CACHED* newEntry = (CACHED*)malloc(sizeof(CACHED));
-		newEntry->ttl = 100; // Set TTL value as needed
-		newEntry->domainName = strdup(Url);
-		newEntry->ipAddress = ip;
-		addToCache(newEntry);
-		cout << ip << endl;
-
-	}
 }
