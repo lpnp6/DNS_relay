@@ -21,6 +21,7 @@ using namespace std;
 #define lengthURL  64 //0~63
 #define IPLength 16
 #define MAX_FILE_LENGTH 253
+#define TIMEOUT 5000  // 超时时间设置为5秒
 
 //DNS报文首部 12字节
 #include <utility>
@@ -32,6 +33,7 @@ using namespace std;
 #include <windows.h>
 #include <time.h>
 #include <map>
+#include <Ws2tcpip.h>
 using namespace std;
 
 #pragma once
@@ -110,29 +112,27 @@ typedef struct ID_Change
 } ID_trans;
 
 //从上层DNS获取的资源链表结点
-typedef struct Cached
+struct cacheInfo
 {
 	int ttl;
-	uint32_t ipAddress;//IP地址
-	char* domainName;//域名
-	char* cName;//别名
-	struct Cached* nextCachedPtr;
-}CACHED;
-typedef CACHED* CACHED_PTR;//后续有机会再用 
+	char* ipAddress;//IP地址
+};
+
 
 #pragma  comment(lib, "Ws2_32.lib") //加载 ws2_32.dll
 
 void read(const char* filename);// 查找域名对应的IP地址
 const char* findIP(const char* domain); //获取DNS请求中的域名
 
+const char* handlecache(char* domain);
 void GetUrl(char* recvbuf, int recvnum);
 
 unsigned short replace_id(unsigned short OldID, SOCKADDR_IN temp, BOOL ifdone);
 
-void PrintRecvInfo(sockaddr_in clientname,DnsPacket* packet, unsigned short newID, const char* url,int iecv);
-void PrintSendInfo(sockaddr_in clientname,DnsPacket* packet, unsigned short oldID, unsigned short newID, const char* getIP);
+void PrintRecvInfo(sockaddr_in clientname, DnsPacket* packet, unsigned short newID, const char* url, int iecv);
+void PrintSendInfo(sockaddr_in clientname, DnsPacket* packet, unsigned short oldID, unsigned short newID, const char* getIP);
 
-void setParameter(int argc, char* argv[]); 
+void setParameter(int argc, char* argv[]);
 
 void printBinary(const char* data, int a);
 void printHex(const char* data, size_t length);
