@@ -8,6 +8,10 @@ extern char DefDNSAddress[IPLength];
 extern char filePath[MAX_FILE_LENGTH];
 extern int DebugLevel;
 extern map<char*, cacheInfo>cache;//cache表
+extern ID_trans id_trans_table[AMOUNT];	//ID转换表
+extern int IDcount;			//转换表中的条目个数
+extern char Url[lengthURL];					//域名
+extern SYSTEMTIME TimeOfSys;                     //系统时间
 
 void newthread(int i,SOCKET servSock, SOCKET localSock,SOCKADDR_IN serverName, SOCKADDR_IN clientName, char*recvBuf,int iRecv, int client_len)
 {
