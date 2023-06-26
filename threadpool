@@ -1,5 +1,6 @@
 #include "Header.h"
-extern 
+extern thread threadpool[threadNum];
+extern bool isBusy[threadNum];
 
 void newthread(int i,SOCKET servSock, SOCKET localSock,SOCKADDR_IN serverName, SOCKADDR_IN clientName, char*recvBuf,int iRecv, int client_len)
 {
