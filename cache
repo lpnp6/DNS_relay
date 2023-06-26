@@ -79,3 +79,109 @@ void handlecache(char *domainName) {
         addToCache(newEntry);
     }
 }
+
+
+
+/***
+
+
+#define HASHSIZE 1000
+typedef struct Cached
+{
+	int ttl;
+	char* ipAddress;//IP地址
+	char* domainName;//域名
+	struct Cached* nextCachedPtr;
+}CACHED;
+static CACHED* cache[HASHSIZE];
+
+
+unsigned int hashfunc(char* str) {
+	unsigned int hash = 5381;
+	int c;
+
+	while (c = *str++) {
+		hash = ((hash << 5) + hash) + c;
+	}
+
+	return hash % HASHSIZE;
+}
+
+CACHED* findInCache(char* domainName) {
+	unsigned int index = hashfunc(domainName);
+	CACHED* current = cache[index];
+	while (current != NULL) {
+		if (strcmp(current->domainName, domainName) == 0) {
+			return current;
+		}
+		current = current->nextCachedPtr;
+	}
+	return NULL;
+}
+
+void addToCache(CACHED* newEntry) {
+	unsigned int index = hashfunc(newEntry->domainName);
+	newEntry->nextCachedPtr = cache[index];
+	cache[index] = newEntry;
+}
+
+void removeFromCache(CACHED* entry) {
+	unsigned int index = hashfunc(entry->domainName);
+	if (cache[index] == entry) {
+		cache[index] = entry->nextCachedPtr;
+		free(entry);
+		return;
+	}
+
+	CACHED* current = cache[index];
+	while (current != NULL && current->nextCachedPtr != entry) {
+		current = current->nextCachedPtr;
+	}
+
+	if (current != NULL) {
+		current->nextCachedPtr = entry->nextCachedPtr;
+		free(entry);
+	}
+}
+
+void updateCacheTtl() {
+	for (int i = 0; i < HASHSIZE; i++) {
+		CACHED* current = cache[i];
+		while (current != NULL) {
+			current->ttl--;
+			if (current->ttl <= 0) {
+				CACHED* next = current->nextCachedPtr;
+				removeFromCache(current);
+				current = next;
+			}
+			else {
+				current = current->nextCachedPtr;
+			}
+		}
+	}
+}
+//这块函数添加到main函数里面
+char* handlecache(char* domainName) {
+	CACHED* cacheEntry = findInCache(domainName);
+	if (cacheEntry != NULL && cacheEntry->ttl > 0) {
+		// 找到了
+		printf("Using cached result for %s\n", domainName);
+		return cacheEntry->ipAddress;
+	}
+	else {
+		// 没找到
+		printf("Querying upstream DNS server for %s\n", domainName);
+		//调用dns服务器代码省略
+		// 添加到cache；
+		CACHED* newEntry = (CACHED*)malloc(sizeof(CACHED));
+		newEntry->ttl = 100; // Set TTL value as needed
+		newEntry->domainName = strdup(domainName);
+		newEntry->ipAddress = (char*)findIP(domainName);
+		addToCache(newEntry);
+		return newEntry->ipAddress;
+	}
+}
+
+
+
+*/
