@@ -1,34 +1,81 @@
-unsigned int hash(char *s) {
-    unsigned int hashval;
+unsigned int hash(char *str) {
+    unsigned int hash = 5381;
+    int c;
 
-    for (hashval = 0; *s != '\0'; s++)
-        hashval = *s + 31 * hashval;
-    return hashval % HASHSIZE;
+    while (c = *str++) {
+        hash = ((hash << 5) + hash) + c;
+    }
+
+    return hash % HASH_SIZE;
 }
 
 CACHED *findInCache(char *domainName) {
-    CACHED *np;
-
-    for (np = hashtab[hash(domainName)]; np != NULL; np = np->next)
-        if (strcmp(domainName, np->domainName) == 0)
-            return np;
+    unsigned int index = hash(domainName);
+    CACHED *current = cache[index];
+    while (current != NULL) {
+        if (strcmp(current->domainName, domainName) == 0) {
+            return current;
+        }
+        current = current->nextCachedPtr;
+    }
     return NULL;
 }
 
-CACHED *addToCache(CACHED *newEntry) {
-    unsigned int hashval;
-    CACHED *np;
+void addToCache(CACHED *newEntry) {
+    unsigned int index = hash(newEntry->domainName);
+    newEntry->nextCachedPtr = cache[index];
+    cache[index] = newEntry;
+}
 
-    if ((np = findInCache(newEntry->domainName)) == NULL) {
-        np = (CACHED *) malloc(sizeof(*np));
-        if (np == NULL || (np->domainName = strdup(newEntry->domainName)) == NULL)
-            return NULL;
-        hashval = hash(newEntry->domainName);
-        np->next = hashtab[hashval];
-        hashtab[hashval] = np;
-    } else
-        free((void *) np->ipAddress);
-    if ((np->ipAddress = newEntry->ipAddress) == 0)
-        return NULL;
-    return np;
+void removeFromCache(CACHED *entry) {
+    unsigned int index = hash(entry->domainName);
+    if (cache[index] == entry) {
+        cache[index] = entry->nextCachedPtr;
+        free(entry);
+        return;
+    }
+
+    CACHED *current = cache[index];
+    while (current != NULL && current->nextCachedPtr != entry) {
+        current = current->nextCachedPtr;
+    }
+
+    if (current != NULL) {
+        current->nextCachedPtr = entry->nextCachedPtr;
+        free(entry);
+    }
+}
+
+void updateCacheTtl() {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        CACHED *current = cache[i];
+        while (current != NULL) {
+            current->ttl--;
+            if (current->ttl <= 0) {
+                CACHED *next = current->nextCachedPtr;
+                removeFromCache(current);
+                current = next;
+            } else {
+                current = current->nextCachedPtr;
+            }
+        }
+    }
+}
+//这块函数添加到main函数里面
+void handlecache(char *domainName) {
+    CACHED *cacheEntry = findInCache(domainName);
+    if (cacheEntry != NULL && cacheEntry->ttl > 0) {
+        // Use cached result
+        printf("Using cached result for %s\n", domainName);
+    } else {
+        // Query upstream DNS server and get result
+        printf("Querying upstream DNS server for %s\n", domainName);
+        //调用dns服务器代码省略
+        // Add result to cache
+        CACHED *newEntry = malloc(sizeof(CACHED));
+        newEntry->ttl = 100; // Set TTL value as needed
+        newEntry->domainName = strdup(domainName);
+        newEntry->ipAddress = ip;
+        addToCache(newEntry);
+    }
 }
