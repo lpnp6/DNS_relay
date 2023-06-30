@@ -10,7 +10,7 @@ void Init()
 {
 	strcpy(DefDNSAddress, "10.3.9.44");
 	strcpy(LocalDNSAddress, "127.0.0.1");
-	strcpy(filePath, "dnsrelay.txt");
+	strcpy(filePath, "C:\\Users\\32066\\Desktop\\jwks\\dnsrelay.txt");
 	DebugLevel = 0;
 }
 
@@ -58,4 +58,4 @@ void setParameter(int argc, char* argv[])
 	}
 	printf("Name server %s:53\n", DefDNSAddress);
 	printf("Debug level %d\n", DebugLevel);
-}	
+}
