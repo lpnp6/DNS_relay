@@ -34,6 +34,7 @@ using namespace std;
 #include <time.h>
 #include <map>
 #include <Ws2tcpip.h>
+#include <thread>
 using namespace std;
 
 #pragma once
@@ -140,3 +141,4 @@ void parseDNSHeader(DNSHDR* dnsHeader, char* recvBuf);
 void parseQuestion(QUESTION* question, UINT16 count, char* recvBuf, int* offset);
 void parseResourceFields(RR* resources, int count, char* recvBuf, int* offset);
 void parseDNSPacket(DNS_Packet* packet, char* recvBuf);
+void threadFunc();
