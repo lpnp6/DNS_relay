@@ -2,17 +2,21 @@
 #pragma warning(disable:4996)
 
 
-map<char*,cacheInfo> cache;
+map<string, cacheInfo> cache;
+
 bool needAdd = 0;  //当前访问的目标是否需要添加到cache
 const char* handlecache(char* domainName) {
 	const char* getip = findIP(domainName);
 	if (getip == NULL)//先在本地找，没找到去cache找
 	{
-		auto it = cache.find(domainName);
+		string domain = domainName;
+		auto it = cache.find(domain);
 		if (it != cache.end())// 找到了
 		{
 			printf("Using cached result for %s\n", domainName);
+			needAdd = 0;
 			return it->second.ipAddress;
+			
 		}
 		else {
 			// 没找到，标记一下等待添加。
@@ -22,4 +26,29 @@ const char* handlecache(char* domainName) {
 		}
 	}
 	return getip;
+}
+void threadFunc()
+{
+	clock_t t1= clock();
+	while(1)
+	{
+		clock_t t2 = clock();
+		if((t2-t1)/CLOCKS_PER_SEC>=10)
+		{
+			string todel = "";
+			int flag = 0;
+			for(auto it = cache.begin();it!=cache.end();)
+			{
+				it->second.ttl -= 10;
+				if(it->second.ttl<=0)
+				{
+					todel = it->first;
+					flag = 1;
+					break;
+				}
+			}
+			if(flag)   cache.erase(todel);
+		}
+		
+	}
 }
