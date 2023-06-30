@@ -2,6 +2,8 @@
 #include"Header.h"
 
 std::map<string, string>ip_domain_Map;//DNS域名解析表
+extern int DebugLevel;
+
 
 void read(const char* filename) {
 	FILE* file = fopen(filename, "r");
@@ -25,15 +27,18 @@ void read(const char* filename) {
 
 		string Domain(domain);
 		string Ip(ip);
-		
+		//printf("%s   %s\n",ip,domain);
 		// 分配内存并存储IP和域名
 		ip_domain_Map.insert(std::make_pair(Domain, Ip));
+		if (DebugLevel == 2)
+			printf("%d %s %s\n", NameCount, domain, ip);
 		NameCount++;
 	}
 
 	printf("%d names, occupy %d bytes memory\n ", NameCount, ByteCount);
 
 	fclose(file);
+	//return NameCount;
 }
 // 查找域名对应的IP地址
 
