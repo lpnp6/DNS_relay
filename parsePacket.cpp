@@ -1,4 +1,5 @@
 #include "Header.h"
+#pragma warning (disable:4996)
 
 void printBinary(const char* data, int a) {
 	// 遍历字符数组，直到遇到空字符 '\0'
@@ -98,7 +99,6 @@ void parseQuestion(QUESTION* question, UINT16 count, char* recvBuf, int* offset)
 }
 
 void parseResourceFields(RR* resources, int count, char* recvBuf, int* offset) {
-	//printHex(recvBuf, 200);
 	for (int i = 0; i < count; i++) {
 		memset(resources + i, 0, sizeof(resources[i]));
 		// 解析资源字段的各个字段
